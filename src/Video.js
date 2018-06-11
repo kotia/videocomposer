@@ -5,40 +5,37 @@ export default class Video extends Component {
     constructor(props) {
         super(props);
         this.videoEl = React.createRef();
-        this.listener = undefined;
     }
 
     play() {
-        this.videoEl.play();
-        this.listener = this.videoEl.addEventListener('ended', () => {
-            this.props.playFinished();
-        });
+        this.videoEl.current.play();
+        this.videoEl.current.addEventListener('ended', this.props.playFinished);
     }
 
     replay() {
-        this.videoEl.pause();
-        this.videoEl.currentTime = 0;
+        this.videoEl.current.pause();
+        this.videoEl.current.currentTime = 0;
         this.play();
     }
 
     pause() {
-        this.videoEl.pause();
-        this.videoEl.removeEventListener(this.listener);
+        this.videoEl.current.pause();
+        this.videoEl.current.removeEventListener('ended', this.props.playFinished);
     }
 
     stop() {
-        this.videoEl.pause();
-        this.videoEl.currentTime = 0;
+        this.videoEl.current.pause();
+        this.videoEl.current.currentTime = 0;
     }
 
     componentDidUpdate(oldProps) {
-        if (oldProps.video !== this.props.video) {
+        if (oldProps.video !== this.props.video || oldProps.changedPlaying !== this.props.changedPlaying) {
             this.replay();
         } else if (!oldProps.paused && this.props.paused) {
             this.pause();
         } else if (oldProps.paused && !this.props.paused) {
             this.play();
-        } else if (!this.props.paused && !this.props.playing) {
+        } else if (!this.props.paused && !this.props.playing && (oldProps.paused || oldProps.playing)) {
             this.stop();
         }
     }

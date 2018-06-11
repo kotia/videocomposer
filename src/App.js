@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 import PlayRemote from './PlayRemote';
+import Video from './Video';
 
 class App extends Component {
     constructor(props) {
@@ -38,6 +39,7 @@ class App extends Component {
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
         this.stop = this.stop.bind(this);
+        this.playFinished = this.playFinished.bind(this);
     }
 
     startRecordingTimeTicker() {
@@ -102,7 +104,6 @@ class App extends Component {
 
     pause() {
         clearInterval(this.playingInterval);
-        this.pauseVideo();
         this.setState({
             playing: false,
             paused: true
@@ -117,36 +118,12 @@ class App extends Component {
             playTime: 0,
             currentPlayingSlide: 0
         });
-        this.stopVideo();
     }
 
-    playVideo() {
-        const video = this.videoEl.current;
-        video.play();
-    }
-
-    replayVideo() {
-        const video = this.videoEl.current;
-        video.pause();
-        video.currentTime = 0;
-        video.play();
-        video.addEventListener('ended', () => {
-            if (this.state.playing && this.state.timeline.length - 1 === this.state.currentPlayingSlide) {
-                this.stopVideo();
-                this.stop();
-            }
-        });
-    }
-
-    pauseVideo() {
-        const video = this.videoEl.current;
-        video.pause();
-    }
-
-    stopVideo() {
-        const video = this.videoEl.current;
-        video.currentTime = 0;
-        video.pause();
+    playFinished() {
+        if (this.state.playing && this.state.timeline.length - 1 === this.state.currentPlayingSlide) {
+            this.stop();
+        }
     }
 
     addTimestamp() {
@@ -163,23 +140,20 @@ class App extends Component {
 
     componentDidUpdate(oldProps, oldState) {
         if (oldState.changedPlaying !== this.state.changedPlaying) {
-            this.replayVideo();
             this.addTimestamp();
-        }
-
-        if (oldState.paused === true && this.state.paused === false) {
-            this.playVideo();
         }
     }
 
     render() {
         return (
             <div className="App">
-                <div className="video-container">
-                    <video ref={this.videoEl} src={this.videos[this.state.video]}>
-                        <p>HTML5 video is not supported</p>
-                    </video>
-                </div>
+                <Video
+                    video={this.videos[this.state.video]}
+                    paused={this.state.paused}
+                    playing={this.state.playing}
+                    changedPlaying={this.state.changedPlaying}
+                    playFinished={this.playFinished}
+                />
                 <div className="remotes">
                     <div className="remotes__videos-playback">
                         <button onClick={this.changePlaying(0)}>1</button>

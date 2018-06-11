@@ -2,9 +2,6 @@ import React, { Component } from 'react';
 import './App.css';
 
 export default class PlayRemote extends Component {
-    constructor(props) {
-        super(props);
-    }
 
     render() {
         return (
