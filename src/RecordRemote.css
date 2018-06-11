@@ -1,0 +1,15 @@
+.remotes__records {
+  display: flex;
+  justify-content: center;
+  margin: 1em 0;
+}
+
+.time-ticker {
+  margin: 0.5em;
+  font-size: 1.5em;
+}
+
+
+
+
+

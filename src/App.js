@@ -2,6 +2,10 @@ import React, { Component } from 'react';
 import './App.css';
 
 import PlayRemote from './PlayRemote';
+import PlaybackRemote from './PlaybackRemote';
+import RecordRemote from './RecordRemote';
+import OutputRemote from './OutputRemote';
+
 import Video from './Video';
 
 class App extends Component {
@@ -18,13 +22,12 @@ class App extends Component {
 
         this.state = {
             video: 0,
-            changedPlaying: 0,
+            changedVideo: 0,
             recording: false,
             recordTime: 0,
 
             playing: false,
             paused: false,
-            stopped: false,
 
             playTime: 0,
             currentPlayingSlide: 0,
@@ -32,14 +35,14 @@ class App extends Component {
             timeline: []
         };
 
-        this.changePlaying = this.changePlaying.bind(this);
+        this.changeVideo = this.changeVideo.bind(this);
         this.startRecording = this.startRecording.bind(this);
         this.stopRecording = this.stopRecording.bind(this);
 
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
         this.stop = this.stop.bind(this);
-        this.playFinished = this.playFinished.bind(this);
+        this.hasPlayFinished = this.hasPlayFinished.bind(this);
     }
 
     startRecordingTimeTicker() {
@@ -50,11 +53,17 @@ class App extends Component {
         }, 100);
     }
 
-    changePlaying(number) {
+    changeVideo(number) {
         return () => {
+            const timestamp = Date.now();
             this.setState({
                 video: number,
-                changedPlaying: this.state.changedPlaying + 1
+                changedVideo: this.state.changedVideo + 1,
+                timeline: this.state.recording ?
+                    [...this.state.timeline, [
+                        number,
+                        Math.round((timestamp - this.state.recordingStart)/100)/10
+                    ]] : this.state.timeline
             });
         }
     }
@@ -66,7 +75,6 @@ class App extends Component {
             recordingStart: Date.now()
         });
         this.startRecordingTimeTicker();
-
     }
 
     stopRecording() {
@@ -74,6 +82,19 @@ class App extends Component {
             recording: false,
         });
         clearInterval(this.recordingInterval);
+    }
+
+    switchToNextVideo(playTime) {
+        const videoData = this.state.timeline[this.state.currentPlayingSlide];
+        if (
+            (playTime ? playTime : this.state.playTime) === videoData[1]
+        ) {
+            this.changeVideo(videoData[0])();
+            
+            if (this.state.timeline.length - 1 > this.state.currentPlayingSlide) {
+                this.setState({currentPlayingSlide: this.state.currentPlayingSlide + 1});
+            }
+        }
     }
 
     play() {
@@ -91,15 +112,6 @@ class App extends Component {
             });
             this.switchToNextVideo(playTime);
         }, 100);
-    }
-
-    switchToNextVideo(playTime) {
-        if ((playTime ? playTime : this.state.playTime) === this.state.timeline[this.state.currentPlayingSlide][1] ) {
-            this.changePlaying(this.state.timeline[this.state.currentPlayingSlide][0])();
-            if (this.state.timeline.length - 1 > this.state.currentPlayingSlide) {
-                this.setState({currentPlayingSlide: this.state.currentPlayingSlide + 1});
-            }
-        }
     }
 
     pause() {
@@ -120,27 +132,9 @@ class App extends Component {
         });
     }
 
-    playFinished() {
+    hasPlayFinished() {
         if (this.state.playing && this.state.timeline.length - 1 === this.state.currentPlayingSlide) {
             this.stop();
-        }
-    }
-
-    addTimestamp() {
-        if (this.state.recording) {
-            const timestamp = Date.now();
-            this.setState({
-                timeline: [...this.state.timeline, [
-                    this.state.video,
-                    Math.round((timestamp - this.state.recordingStart)/100)/10
-                ]]
-            });
-        }
-    }
-
-    componentDidUpdate(oldProps, oldState) {
-        if (oldState.changedPlaying !== this.state.changedPlaying) {
-            this.addTimestamp();
         }
     }
 
@@ -151,28 +145,20 @@ class App extends Component {
                     video={this.videos[this.state.video]}
                     paused={this.state.paused}
                     playing={this.state.playing}
-                    changedPlaying={this.state.changedPlaying}
-                    playFinished={this.playFinished}
+                    changedVideo={this.state.changedVideo}
+                    playFinished={this.hasPlayFinished}
                 />
                 <div className="remotes">
-                    <div className="remotes__videos-playback">
-                        <button onClick={this.changePlaying(0)}>1</button>
-                        <button onClick={this.changePlaying(1)}>2</button>
-                        <button onClick={this.changePlaying(2)}>3</button>
-                    </div>
-                    <div className="remotes__records">
-                        {
-                            this.state.recording ?
-                                <button onClick={this.stopRecording}>Stop recording</button> :
-                                <button onClick={this.startRecording}>Start recording</button>
-                        }
-
-                        {
-                            this.state.recording ?
-                                <span className="time-ticker">{this.state.recordTime}</span> :
-                                null
-                        }
-                    </div>
+                    <PlaybackRemote
+                        changeVideo={this.changeVideo}
+                        videos={this.videos}
+                    />
+                    <RecordRemote
+                        recording={this.state.recording}
+                        startRecording={this.startRecording}
+                        stopRecording={this.stopRecording}
+                        recordTime={this.state.recordTime}
+                    />
                     {!this.state.recording && this.state.timeline.length ?
                         <PlayRemote
                             playing={this.state.playing}
@@ -182,18 +168,10 @@ class App extends Component {
                             stop={this.stop}
                         /> : null
                     }
-                    <div className="remotes__record-output">
-                        <h2>Output:</h2>
-                        <div className="remotes__record-output__output">{
-                            this.state.timeline.map((t, i) =>
-                                <span className="record-milestone" key={i}>
-                                    {t[0]}: {t[1]}
-                                </span>
-                            )
-                        }</div>
-                    </div>
+                    <OutputRemote
+                        timeline={this.state.timeline}
+                    />
                 </div>
-
             </div>
         );
     }

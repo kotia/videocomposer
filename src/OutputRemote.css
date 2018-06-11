@@ -1,0 +1,20 @@
+.remotes__record-output__output {
+  margin: 1em 0;
+  border: 0.1em solid #444;
+  padding: 0.5em;
+}
+
+.record-milestone {
+  background-color: #d3d3d3;
+  padding: 0.1em 0.2em;
+  border-radius: 0.1em;
+  color: #444;
+  font-size: 0.9em;
+  margin: 0.2em;
+  display: inline-block;
+}
+
+
+
+
+

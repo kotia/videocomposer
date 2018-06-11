@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import './App.css';
+import './Video.css';
 
 export default class Video extends Component {
     constructor(props) {
@@ -29,7 +29,7 @@ export default class Video extends Component {
     }
 
     componentDidUpdate(oldProps) {
-        if (oldProps.video !== this.props.video || oldProps.changedPlaying !== this.props.changedPlaying) {
+        if (oldProps.video !== this.props.video || oldProps.changedVideo !== this.props.changedVideo) {
             this.replay();
         } else if (!oldProps.paused && this.props.paused) {
             this.pause();

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import './App.css';
+import './PlayRemote.css';
 
 export default class PlayRemote extends Component {
 
